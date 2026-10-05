@@ -1,0 +1,10 @@
+<resources>
+    <string name="module_name">一加计算器彩蛋</string>
+    <string name="module_description">输入 1+ 后按 =，播放 Never Settle 彩蛋。支持现代 API 101–102 框架。</string>
+    <string name="instructions">在框架管理器中启用本模块，作用域勾选计算器，然后彻底关闭计算器并重新打开。\n\n输入 1+，再按 =，即可播放彩蛋。播放期间请等待，播放结束后按下一个计算器按键可关闭彩蛋并继续输入。\n\n适配：一加计算器 17.2.14\n彩蛋流程来源：旧版 16.4.2\n包名：com.coloros.calculator\n框架要求：现代 libxposed API 101–102</string>
+    <string name="open_calculator">打开计算器</string>
+    <string name="calculator_missing">未找到已适配的计算器</string>
+    <string name="hide_launcher_icon">隐藏桌面图标</string>
+    <string name="hide_launcher_icon_help">隐藏后，可从 LSPosed 模块页面打开本模块并恢复图标。若桌面仍显示，请在 LSPosed 设置中关闭“强制显示桌面图标”，再返回桌面。</string>
+    <string name="icon_change_failed">图标设置失败，请重新打开模块后再试。</string>
+</resources>

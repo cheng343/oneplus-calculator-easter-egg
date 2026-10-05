@@ -1,0 +1,17 @@
+Third-party components
+
+This module includes portions of Lottie Android 6.7.1 and its transitive dependencies after R8 optimization.
+
+Lottie Android: Airbnb, Inc. — Apache License 2.0
+https://github.com/airbnb/lottie-android
+
+AndroidX: The Android Open Source Project — Apache License 2.0
+https://android.googlesource.com/platform/frameworks/support/
+
+Okio: Square, Inc. — Apache License 2.0
+https://github.com/square/okio
+
+Kotlin standard library: JetBrains s.r.o. and Kotlin contributors — Apache License 2.0
+https://github.com/JetBrains/kotlin
+
+See the accompanying APACHE-2.0.txt for the license text. Original notices packaged by dependencies are retained where present. libxposed API is compile-only and is supplied by the installed framework.

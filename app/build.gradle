@@ -1,0 +1,54 @@
+plugins {
+    id 'com.android.application'
+}
+android {
+    namespace 'io.github.cheng343.calculator.easteregg'
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
+    buildToolsVersion '36.0.0'
+    defaultConfig {
+        applicationId 'io.github.cheng343.calculator.easteregg'
+        minSdk 30
+        targetSdk 37
+        versionCode 10012 + (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+        versionName '0.1.0'
+    }
+    signingConfigs {
+        ciDebug {
+            storeFile rootProject.file('.ci/debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.ciDebug
+            minifyEnabled false
+        }
+        release {
+            signingConfig signingConfigs.ciDebug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    packaging {
+        dex {
+            useLegacyPackaging = true
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+dependencies {
+    compileOnly "io.github.libxposed:api:${providers.gradleProperty('compileApiBaseline').getOrElse('102.0.0')}"
+    // Okio references this optional annotation; provide it to R8 without packaging it.
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+    implementation 'com.airbnb.android:lottie:6.7.1'
+}
