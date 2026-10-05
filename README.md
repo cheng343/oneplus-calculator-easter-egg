@@ -43,7 +43,7 @@ APK 大小为 **411,295 字节（约 0.41 MB）**，比此前约 7.71 MB 的调�
 
 ## 反馈
 
-请在[问题反馈](https://github.com/cheng343/oneplus-calculator-easter-egg-feedback/issues)提供计算器版本、系统版本、框架版本，以及复现步骤。需要排查播放问题时，可附 `OnePlusEasterEgg` 标签的框架日志和录屏；模块日志不会记录你的计算表达式。
+请在[问题反馈](https://github.com/cheng343/oneplus-calculator-easter-egg/issues)提供计算器版本、系统版本、框架版本，以及复现步骤。需要排查播放问题时，可附 `OnePlusEasterEgg` 标签的框架日志和录屏；模块日志不会记录你的计算表达式。
 
 ## 第三方组件
 
