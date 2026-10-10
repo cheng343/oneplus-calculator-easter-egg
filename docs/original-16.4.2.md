@@ -83,3 +83,21 @@ JADX 全量反编译报告 12 个方法错误；本次彩蛋关键方法可读�
 ## 验证边界
 
 本记录来自两份 APK 静态源码/资源比对。编译、lint、签名和元数据检查交给 GitHub Actions。尚未在连接的手机上观察 0.1.2；布局、OEM 圆角和渲染差异需要真机反馈，不能据此声称像素级相同。
+
+## 17.2.16 适配依据
+
+样本 versionCode `17002016`。判定条件在旧版里的原始形态来自 16.4.2 的 `h3.g.Y1()` / `z2()`：
+
+| 环节 | 旧版 16.4.2 | 17.2.14 | 17.2.16 |
+| --- | --- | --- | --- |
+| 清空输入 | `z2()` 第一步同步调用 `U1()` | `Reflect.call(fragment, "L1")`，按下等号时同步执行 | 同左，`L1()` 仍在 |
+| 分支判定 | `t3.k1.H0()` = `Build.VERSION.SDK_INT > 35 && t3.i0.C()`，且 `!N0` | `c3.i1.H0()`，同一表达式 | **`c3.i1` 已不是那个类**：变成 COUI 工具栏工具类，只有 `a`/`b`，没有 `H0()` |
+| 品牌标志 | `t3.i0.C()` → `"oneplus".equalsIgnoreCase(Build.BRAND)` | `c3.f0.C()` → 同一表达式 | **`c3.f0.F()` 被改成先调用比较再 `return false`**，即恒为 false |
+
+因此模块不再反射 `c3.i1`，直接用平台 API 计算
+`Build.VERSION.SDK_INT > 35 && "oneplus".equalsIgnoreCase(Build.BRAND) && !K0`。
+这与 16.4.2、17.2.14 的判定结果一致，也不再受混淆名再次变化影响。
+
+动画资源：17.2.16 的 `assets/` 已无 `never_settle*`，全量 smali 也没有任何文件名引用。模块把三份 JSON 打进自身 APK，读取顺序为「模块 assets → 宿主 assets」；三份文件在两版 APK 中 SHA-256 相同，见上文比对表。
+
+字段核对：`K`（公式）、`d0`（根布局）、`j`（横屏）、`K0`（confidential）在 17.2.16 中仍然存在，`CalculatorFormula.setUserInteractionEnabled(boolean)` 与 `CalculatorFragment` 的 `L1()` / `onClick(View)` / `onPause` / `onDestroyView` / `onConfigurationChanged` 也都在。`K0` 与 `j` 读取失败时不再中断彩蛋，只记录日志并使用回退值。

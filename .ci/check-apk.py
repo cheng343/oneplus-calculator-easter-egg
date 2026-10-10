@@ -19,6 +19,15 @@ with zipfile.ZipFile(apk) as archive:
     assert properties["targetApiVersion"] == "102", properties
     assert properties["staticScope"] == "true", properties
     assert "assets/xposed_init" not in archive.namelist()
+    # The calculator 17.2.16 removed the never_settle assets, so the module has to
+    # carry its own copy; the host-assets fallback alone would fail there.
+    bundled = {
+        "assets/never_settle_animation.json",
+        "assets/never_settle_animation_oos16_light.json",
+        "assets/never_settle_animation_oos16_dark.json",
+    }
+    missing = sorted(bundled - set(archive.namelist()))
+    assert not missing, f"Bundled animations missing from the APK: {missing}"
     dex_names = [name for name in archive.namelist()
                  if re.fullmatch(r"classes(?:\d+)?\.dex", name)]
     assert dex_names, "APK has no DEX files"
@@ -29,4 +38,5 @@ with zipfile.ZipFile(apk) as archive:
     assert b"never_settle_animation.json" in dex
     assert b"Lcom/airbnb/lottie/LottieCompositionFactory;" in dex, "Bundled animation parser missing"
     assert b"Lcom/airbnb/lottie/LottieDrawable;" in dex, "Bundled animation renderer missing"
-print("Built APK contains modern API 101-102 module entry, exact target scope, and animation hook.")
+print("Built APK contains modern API 101-102 module entry, exact target scope, "
+      "bundled animations and the animation hook.")

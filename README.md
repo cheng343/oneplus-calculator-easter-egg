@@ -4,7 +4,7 @@
 
 ## 要求
 
-- 一加系统计算器 **17.2.14**（包名 `com.coloros.calculator`）。
+- 一加系统计算器 **17.2.14 / 17.2.16**（包名 `com.coloros.calculator`）。
 - 模块 minSdk 为 30；需要支持 **现代 libxposed API 101–102** 的 LSPosed/兼容框架。
 - 暂仅适配上述计算器版本，其他版本可能需要更新 Hook。
 
@@ -13,13 +13,13 @@
 1. 从 Releases 下载并安装 APK。
 2. 在框架管理器中启用“一加计算器彩蛋”，作用域勾选计算器 `com.coloros.calculator`。
 3. 完全关闭计算器，再重新打开；若框架要求重启，请按框架提示操作。
-4. 输入 `1+`，再按 `=`。动画播放结束后，下一次按键关闭彩蛋并继续输入。
+4. 输入 `1+`，再按 `=`。输入栏会立即清空并开始播放彩蛋；播放结束后，下一次按键关闭彩蛋并继续输入。
 
 ## 功能
 
 - 根据旧版计算器 **16.4.2** 的实现恢复入场、背景变化、播放和退出流程。
 - 按系统条件选择经典/OOS16 分支，以及当前深浅色资源。
-- 直接使用目标计算器内置的动画 JSON，独立 Lottie 渲染。
+- 模块自带三份动画 JSON，独立 Lottie 渲染；仅在模块副本不可用时回退到计算器内置资源。
 - 播放期间屏蔽计算器按键，结束后恢复输入。
 - 支持隐藏桌面图标。隐藏后可从 LSPosed 模块页面打开设置，并恢复图标。
 
@@ -28,6 +28,15 @@
 打开本模块，勾选 **隐藏桌面图标**。隐藏后，使用 LSPosed 模块页面的设置入口重新打开本模块；取消勾选即可恢复。
 
 若仍显示图标，请在 LSPosed 设置里关闭 **强制显示桌面图标**。不同框架分支的选项名称可能不同；若为“允许隐藏桌面图标”，则应开启。
+
+## 版本 0.2.0
+
+适配一加计算器 **17.2.16**（17.2.14 继续可用）：
+
+- 17.2.16 删除了全部 Never Settle 动画资源，模块改为自带三份 JSON（与 16.4.2 / 17.2.14 逐字节相同），读取顺序为「模块 assets → 宿主 assets」。
+- 17.2.16 同时改动了混淆映射：原分支判定依赖的 `c3.i1.H0()` 已不存在。模块改为按旧版原式用平台 API 计算，不再受混淆名变化影响。
+- 按下 `=` 时立即清空输入栏，与旧版 `z2()` 同步调用 `U1()` 的时序一致，不再等待动画解析完成。
+- 17.2.14 上的分支判定结果与 0.1.0 相同。
 
 ## 版本 0.1.0
 
@@ -61,8 +70,8 @@ APK 大小为 **411,295 字节（约 0.41 MB）**，比此前约 7.71 MB 的调�
 
 Fork 未配置该 Secret 时，会在 GitHub runner 上生成临时调试密钥；该签名与正式版不同，无法直接覆盖正式版。需要保持自己 Fork 的签名时，可在 Fork 的 Actions Secret 中配置自己的 Base64 编码 keystore（alias `androiddebugkey`，密码 `android`）。
 
-版本名称为 `0.1.0`，内部 versionCode 从 10012 加上公开仓库的构建序号，继续递增。
+版本名称为 `0.2.0`，内部 versionCode 从 10012 加上公开仓库的构建序号，继续递增。
 
 ---
 
-Type **1+**, then press **=**, in the OnePlus calculator to restore the Never Settle Easter egg. Supported target calculator version: **17.2.14** (`com.coloros.calculator`). Requires a framework implementing **modern libxposed API 101–102**. Enable the module for the calculator, restart the calculator, and enter the trigger. The module also offers a reversible launcher icon hiding option; its settings remain accessible from the LSPosed module page. Both API baselines compile on GitHub Actions; on-device validation of API 101 and this optimized release is pending.
+Type **1+**, then press **=**, in the OnePlus calculator to restore the Never Settle Easter egg. Supported target calculator versions: **17.2.14 / 17.2.16** (`com.coloros.calculator`). Requires a framework implementing **modern libxposed API 101–102**. Enable the module for the calculator, restart the calculator, and enter the trigger; the input field is cleared immediately and the animation starts. The module also offers a reversible launcher icon hiding option; its settings remain accessible from the LSPosed module page. Both API baselines compile on GitHub Actions; on-device validation of API 101 and this release is pending.

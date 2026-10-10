@@ -12,6 +12,7 @@ import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
@@ -30,19 +31,54 @@ import com.airbnb.lottie.LottieDrawable;
 import com.airbnb.lottie.LottieListener;
 import com.airbnb.lottie.LottieTask;
 import com.airbnb.lottie.RenderMode;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 final class EasterEggController {
     interface Logger { void write(String message, Throwable error); }
+    private static final String BUNDLED_ASSET_DIR = "assets/";
     private final ClassLoader targetLoader;
+    private final List<String> moduleApks;
     private final Logger logger;
     private final Map<Object, Session> sessions = new IdentityHashMap<>();
 
-    EasterEggController(ClassLoader targetLoader, Logger logger) {
+    EasterEggController(ClassLoader targetLoader, List<String> moduleApks, Logger logger) {
         this.targetLoader = targetLoader;
+        this.moduleApks = moduleApks;
         this.logger = logger;
+    }
+
+    /**
+     * Reads an animation out of the module APK itself. 17.2.16 deleted all three
+     * never_settle assets from the calculator, so the module carries its own copy.
+     * Returns null when the module copy is unavailable; the caller then falls back
+     * to the host assets, which still exist on 16.4.2 and 17.2.14.
+     */
+    private byte[] bundledAsset(String name) {
+        for (String apk : moduleApks) {
+            try (ZipFile zip = new ZipFile(apk)) {
+                ZipEntry entry = zip.getEntry(BUNDLED_ASSET_DIR + name);
+                if (entry == null) continue;
+                try (InputStream input = zip.getInputStream(entry)) {
+                    ByteArrayOutputStream output =
+                            new ByteArrayOutputStream((int) Math.max(1024L, entry.getSize()));
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
+                    return output.toByteArray();
+                }
+            } catch (IOException ignored) {
+                // Try the next split path; the caller falls back to the host assets.
+            }
+        }
+        return null;
     }
 
     boolean onClick(Object fragment, View button) {
@@ -121,6 +157,7 @@ final class EasterEggController {
         private Runnable loadTimeout;
         private Runnable playbackTimeout;
         private String stage = "loading";
+        private String assetSource = "unknown";
         private int generation;
         private boolean shown;
         private boolean interactionDisabled;
@@ -128,17 +165,22 @@ final class EasterEggController {
 
         // Host Context has host IDs; AppCompat would resolve module style IDs against it.
         @SuppressLint("AppCompatCustomView")
-        Session(Object fragment, ViewGroup root, TextView formula)
-                throws ReflectiveOperationException {
+        Session(Object fragment, ViewGroup root, TextView formula) {
             this.fragment = fragment;
             this.root = root;
             this.formula = formula;
             context = root.getContext();
-            // c3.i1.H0/K0 correspond to old t3.k1.H0/N0 (16.4.2).
-            Class<?> flags = Class.forName("c3.i1", false, targetLoader);
-            oos16 = Boolean.TRUE.equals(Reflect.method(flags, "H0").invoke(null))
-                    && !Boolean.TRUE.equals(Reflect.field(fragment, "K0"));
-            landscape = Boolean.TRUE.equals(Reflect.field(fragment, "j"));
+            // The classic/OOS16 split is the old t3.k1.H0() (16.4.2), which 17.2.14
+            // still exposes as c3.i1.H0(): Build.VERSION.SDK_INT > 35 AND the brand
+            // flag, and that flag is "oneplus".equalsIgnoreCase(Build.BRAND).
+            // 17.2.16 deleted c3.i1.H0() and hard-coded the flag to false, so the
+            // condition is evaluated from the platform rather than from a class name
+            // that the obfuscator reassigns every release. K0 is the old N0
+            // "confidential" flag and j is the landscape flag.
+            oos16 = Build.VERSION.SDK_INT > 35
+                    && "oneplus".equalsIgnoreCase(Build.BRAND)
+                    && !flag(fragment, "K0", false);
+            landscape = flag(fragment, "j", false);
             boolean night = (context.getResources().getConfiguration().uiMode
                     & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
             asset = oos16 ? (night ? "never_settle_animation_oos16_dark.json"
@@ -174,6 +216,16 @@ final class EasterEggController {
             };
         }
 
+        private boolean flag(Object owner, String name, boolean fallback) {
+            try {
+                return Boolean.TRUE.equals(Reflect.field(owner, name));
+            } catch (ReflectiveOperationException error) {
+                logger.write("Optional fragment flag " + name + " is unavailable; assuming "
+                        + fallback + " for this host", null);
+                return fallback;
+            }
+        }
+
         private void copyHostPadding() {
             int stubId = resource(context, "easter_egg_layout_stub", "id");
             View stub = stubId == 0 ? null : root.findViewById(stubId);
@@ -193,15 +245,37 @@ final class EasterEggController {
         void start() {
             root.addOnLayoutChangeListener(layoutListener);
             root.addOnAttachStateChangeListener(attachListener);
-            logger.write("16.4.2 profile=" + (oos16 ? "OOS16" : "classic")
-                    + "; landscape=" + landscape + "; asset=" + asset
-                    + "; independent renderer=" + (LottieDrawable.class.getClassLoader() != targetLoader), null);
             final int token = ++generation;
+            // Old z2() calls U1() as its very first step, before it touches the egg
+            // container, so the formula is cleared on the key press itself instead of
+            // waiting for the animation to be parsed. The original closes formula
+            // editing when the intro starts; doing it in the same step removes the
+            // window in which the user could type into the already-cleared formula.
+            // finish(), exit() and close() all restore it.
+            try {
+                // 17.2.14 and 17.2.16 keep U1() as the private method L1().
+                Reflect.call(fragment, "L1");
+                setInteraction(false);
+            } catch (ReflectiveOperationException error) {
+                fail("clear_failed", error);
+                return;
+            }
             InputStream stream = null;
             try {
-                stream = context.getAssets().open(asset);
+                // Prefer the module's own copy: 17.2.16 ships no never_settle asset
+                // at all. 16.4.2 and 17.2.14 still carry byte-identical files, so
+                // the host fallback keeps those versions working unchanged.
+                byte[] bundled = bundledAsset(asset);
+                assetSource = bundled != null ? "module" : "host";
+                stream = bundled != null ? new ByteArrayInputStream(bundled)
+                        : context.getAssets().open(asset);
+                logger.write("16.4.2 profile=" + (oos16 ? "OOS16" : "classic")
+                        + "; landscape=" + landscape + "; asset=" + asset
+                        + "; source=" + assetSource
+                        + "; independent renderer="
+                        + (LottieDrawable.class.getClassLoader() != targetLoader), null);
                 task = LottieCompositionFactory.fromJsonInputStream(stream,
-                        "oneplus-easter-egg:17.2.14:" + asset);
+                        "oneplus-easter-egg:" + assetSource + ":" + asset);
                 // Factory owns and closes the input stream, including cache hits.
                 stream = null;
                 successListener = composition -> handler.post(() -> {
@@ -243,10 +317,6 @@ final class EasterEggController {
                     }
                 });
                 animation.setImageDrawable(drawable);
-                // Old z2 invokes U1, whose corresponding 17.2.14 method is L1.
-                // Clear the evaluator as well as its display before disabling formula input.
-                Reflect.call(fragment, "L1");
-                setInteraction(false);
                 stage = "entering";
                 root.getOverlay().add(viewport);
                 shown = true;
@@ -406,7 +476,8 @@ final class EasterEggController {
 
         private void fail(String reason, Throwable error) {
             if (closed) return;
-            logger.write(reason + ": asset=" + asset + "; stage=" + stage, error);
+            logger.write(reason + ": asset=" + asset + "; source=" + assetSource
+                    + "; stage=" + stage, error);
             dismiss(fragment);
             Toast.makeText(context, "彩蛋播放失败（" + reason + "），请查看框架日志", Toast.LENGTH_LONG).show();
         }

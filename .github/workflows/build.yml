@@ -71,11 +71,16 @@ jobs:
         run: |
           set -euo pipefail
           apk='app/build/outputs/apk/release/app-release.apk'
-          "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
-          "${ANDROID_HOME}/build-tools/36.0.0/aapt" dump badging "$apk"
+          tools="${ANDROID_HOME}/build-tools/36.0.0"
+          "${tools}/apksigner" verify --verbose --print-certs "$apk"
+          "${tools}/aapt" dump badging "$apk"
           python3 .ci/check-apk.py "$apk"
+          # Name the deliverable from the built APK so a version bump cannot leave
+          # this step pointing at a stale file name.
+          version="$("${tools}/aapt" dump badging "$apk" | grep -m1 -o "versionName='[^']*'" | cut -d"'" -f2)"
+          test -n "$version"
           mkdir -p deliverables
-          cp "$apk" 'deliverables/oneplus-easter-egg-0.1.0.apk'
+          cp "$apk" "deliverables/oneplus-easter-egg-${version}.apk"
           cd deliverables
           sha256sum *.apk > SHA256SUMS.txt
           printf 'Source commit: %s\nGitHub run: %s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" > BUILD.txt

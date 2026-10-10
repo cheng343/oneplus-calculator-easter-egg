@@ -1,5 +1,6 @@
 package io.github.cheng343.calculator.easteregg;
 
+import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.util.Log;
 import android.view.View;
@@ -27,10 +28,11 @@ public final class ModuleMain extends XposedModule {
         try {
             ClassLoader loader = param.getClassLoader();
             Class<?> fragmentClass = Class.forName(FRAGMENT, false, loader);
-            EasterEggController controller = new EasterEggController(loader, (message, error) -> {
-                if (error == null) log(Log.INFO, TAG, message);
-                else log(Log.ERROR, TAG, message, error);
-            });
+            EasterEggController controller = new EasterEggController(loader, moduleApks(),
+                    (message, error) -> {
+                        if (error == null) log(Log.INFO, TAG, message);
+                        else log(Log.ERROR, TAG, message, error);
+                    });
             Method click = Reflect.method(fragmentClass, "onClick", View.class);
             handles.add(configuredHook(click, "calculator-easter-egg-click")
                     .intercept(chain -> {
@@ -48,6 +50,30 @@ public final class ModuleMain extends XposedModule {
             handles.clear();
             log(Log.ERROR, TAG, "Could not install calculator hooks", error);
         }
+    }
+
+    /**
+     * Module APK paths, used to read the bundled never_settle animations. The
+     * calculator 17.2.16 no longer ships them, so the module carries its own copy
+     * and falls back to the host assets only while they still exist.
+     */
+    private List<String> moduleApks() {
+        List<String> paths = new ArrayList<>();
+        try {
+            ApplicationInfo info = getModuleApplicationInfo();
+            if (info != null) {
+                if (info.sourceDir != null && !info.sourceDir.isEmpty()) paths.add(info.sourceDir);
+                if (info.splitSourceDirs != null) {
+                    for (String split : info.splitSourceDirs) {
+                        if (split != null && !split.isEmpty()) paths.add(split);
+                    }
+                }
+            }
+        } catch (Throwable error) {
+            log(Log.WARN, TAG, "Could not resolve the module APK path", error);
+        }
+        if (paths.isEmpty()) log(Log.WARN, TAG, "No module APK path; using host assets only");
+        return paths;
     }
 
     private void installCleanup(Class<?> owner, String name, EasterEggController controller,
