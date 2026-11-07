@@ -4,7 +4,7 @@
 
 ## 要求
 
-- 一加系统计算器 **17.2.14 / 17.2.16**（包名 `com.coloros.calculator`）。
+- 一加系统计算器 **17.2.14 / 17.2.16 / 17.3.2**（包名 `com.coloros.calculator`）。
 - 模块 minSdk 为 30；需要支持 **现代 libxposed API 101–102** 的 LSPosed/兼容框架。
 - 暂仅适配上述计算器版本，其他版本可能需要更新 Hook。
 
@@ -29,7 +29,7 @@
 
 若仍显示图标，请在 LSPosed 设置里关闭 **强制显示桌面图标**。不同框架分支的选项名称可能不同；若为“允许隐藏桌面图标”，则应开启。
 
-## 17.3.2 适配（待验证）
+## 版本 0.3.0
 
 已根据计算器 17.3.2 APK 的代码更新根视图和清除输入的映射；尚需编译并在真机上验证彩蛋、横屏和深浅色表现。
 
@@ -74,8 +74,8 @@ APK 大小为 **411,295 字节（约 0.41 MB）**，比此前约 7.71 MB 的调�
 
 Fork 未配置该 Secret 时，会在 GitHub runner 上生成临时调试密钥；该签名与正式版不同，无法直接覆盖正式版。需要保持自己 Fork 的签名时，可在 Fork 的 Actions Secret 中配置自己的 Base64 编码 keystore（alias `androiddebugkey`，密码 `android`）。
 
-版本名称为 `0.2.0`，内部 versionCode 从 10012 加上公开仓库的构建序号，继续递增。
+版本名称为 `0.3.0`，内部 versionCode 从 10012 加上公开仓库的构建序号，继续递增。
 
 ---
 
-Type **1+**, then press **=**, in the OnePlus calculator to restore the Never Settle Easter egg. Supported target calculator versions: **17.2.14 / 17.2.16** (`com.coloros.calculator`). Requires a framework implementing **modern libxposed API 101–102**. Enable the module for the calculator, restart the calculator, and enter the trigger; the input field is cleared immediately and the animation starts. The module also offers a reversible launcher icon hiding option; its settings remain accessible from the LSPosed module page. Both API baselines compile on GitHub Actions; on-device validation of API 101 and this release is pending.
+Type **1+**, then press **=**, in the OnePlus calculator to restore the Never Settle Easter egg. Supported target calculator versions: **17.2.14 / 17.2.16 / 17.3.2** (`com.coloros.calculator`). Requires a framework implementing **modern libxposed API 101–102**. Enable the module for the calculator, restart the calculator, and enter the trigger; the input field is cleared immediately and the animation starts. The module also offers a reversible launcher icon hiding option; its settings remain accessible from the LSPosed module page. Both API baselines compile on GitHub Actions; on-device validation of 17.3.2 and API 101 is pending.
