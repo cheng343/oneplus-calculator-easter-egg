@@ -2,7 +2,7 @@ name: Build optimized APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/calculator-17-3-2]
     paths-ignore:
       - README.md
       - docs/**

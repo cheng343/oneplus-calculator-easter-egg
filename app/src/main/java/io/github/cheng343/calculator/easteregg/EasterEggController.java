@@ -91,7 +91,11 @@ final class EasterEggController {
                 current.exit();
                 return false;
             }
-            View candidate = (View) Reflect.field(fragment, "d0");
+            // 17.3.2 moved the root from d0 to e0; d0 is now an Animator.
+            String version = button.getContext().getPackageManager()
+                    .getPackageInfo(button.getContext().getPackageName(), 0).versionName;
+            boolean calculator1732 = "17.3.2".equals(version);
+            Object candidate = Reflect.field(fragment, calculator1732 ? "e0" : "d0");
             if (!(candidate instanceof ViewGroup)) return false;
             ViewGroup root = (ViewGroup) candidate;
             Context context = root.getContext();
@@ -100,7 +104,7 @@ final class EasterEggController {
             boolean trigger = equalId != 0 && button.getId() == equalId
                     && formula != null && TriggerMatcher.matches(formula.getText());
             if (!trigger || !root.isAttachedToWindow()) return false;
-            Session session = new Session(fragment, root, formula);
+            Session session = new Session(fragment, root, formula, calculator1732);
             sessions.put(fragment, session);
             try {
                 session.start();
@@ -143,6 +147,7 @@ final class EasterEggController {
         private final Handler handler = new Handler(Looper.getMainLooper());
         private final FrameLayout viewport;
         private final ImageView animation;
+        private final boolean calculator1732;
         private final boolean oos16;
         private final boolean landscape;
         private final String asset;
@@ -165,10 +170,11 @@ final class EasterEggController {
 
         // Host Context has host IDs; AppCompat would resolve module style IDs against it.
         @SuppressLint("AppCompatCustomView")
-        Session(Object fragment, ViewGroup root, TextView formula) {
+        Session(Object fragment, ViewGroup root, TextView formula, boolean calculator1732) {
             this.fragment = fragment;
             this.root = root;
             this.formula = formula;
+            this.calculator1732 = calculator1732;
             context = root.getContext();
             // The classic/OOS16 split is the old t3.k1.H0() (16.4.2), which 17.2.14
             // still exposes as c3.i1.H0(): Build.VERSION.SDK_INT > 35 AND the brand
@@ -179,8 +185,10 @@ final class EasterEggController {
             // "confidential" flag and j is the landscape flag.
             oos16 = Build.VERSION.SDK_INT > 35
                     && "oneplus".equalsIgnoreCase(Build.BRAND)
-                    && !flag(fragment, "K0", false);
-            landscape = flag(fragment, "j", false);
+                    && (calculator1732 || !flag(fragment, "K0", false));
+            landscape = calculator1732
+                    ? context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE
+                    : flag(fragment, "j", false);
             boolean night = (context.getResources().getConfiguration().uiMode
                     & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
             asset = oos16 ? (night ? "never_settle_animation_oos16_dark.json"
@@ -253,8 +261,8 @@ final class EasterEggController {
             // window in which the user could type into the already-cleared formula.
             // finish(), exit() and close() all restore it.
             try {
-                // 17.2.14 and 17.2.16 keep U1() as the private method L1().
-                Reflect.call(fragment, "L1");
+                // 17.3.2 G4() runs the host clear-key path; older hosts use L1().
+                Reflect.call(fragment, calculator1732 ? "G4" : "L1");
                 setInteraction(false);
             } catch (ReflectiveOperationException error) {
                 fail("clear_failed", error);
