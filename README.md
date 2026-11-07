@@ -31,7 +31,7 @@
 
 ## 版本 0.3.0
 
-已根据计算器 17.3.2 APK 的代码更新根视图和清除输入的映射；尚需编译并在真机上验证彩蛋、横屏和深浅色表现。
+根据计算器 17.3.2 APK 的代码更新根视图和清除输入的映射；计算器 17.3.2 已经真机验证。
 
 ## 版本 0.2.0
 
@@ -52,7 +52,7 @@ APK 大小为 **411,295 字节（约 0.41 MB）**，比此前约 7.71 MB 的调�
 
 全部编译、打包、签名和构建检查均在 GitHub Actions 执行。源码已分别通过现代 API 101、102 的编译，并通过 release lint、APK 签名及模块元数据检查。
 
-计算器 17.2.14 与 17.2.16 两版均已真机验证通过；API 101 框架环境仍待验证。不同系统上的布局与动画表现欢迎反馈。
+计算器 17.2.14、17.2.16 与 17.3.2 均已真机验证通过；API 101 框架环境仍待验证。不同系统上的布局与动画表现欢迎反馈。
 
 ## 反馈
 
@@ -78,4 +78,4 @@ Fork 未配置该 Secret 时，会在 GitHub runner 上生成临时调试密钥�
 
 ---
 
-Type **1+**, then press **=**, in the OnePlus calculator to restore the Never Settle Easter egg. Supported target calculator versions: **17.2.14 / 17.2.16 / 17.3.2** (`com.coloros.calculator`). Requires a framework implementing **modern libxposed API 101–102**. Enable the module for the calculator, restart the calculator, and enter the trigger; the input field is cleared immediately and the animation starts. The module also offers a reversible launcher icon hiding option; its settings remain accessible from the LSPosed module page. Both API baselines compile on GitHub Actions; on-device validation of 17.3.2 and API 101 is pending.
+Type **1+**, then press **=**, in the OnePlus calculator to restore the Never Settle Easter egg. Supported target calculator versions: **17.2.14 / 17.2.16 / 17.3.2** (`com.coloros.calculator`). Requires a framework implementing **modern libxposed API 101–102**. Enable the module for the calculator, restart the calculator, and enter the trigger; the input field is cleared immediately and the animation starts. The module also offers a reversible launcher icon hiding option; its settings remain accessible from the LSPosed module page. Both API baselines compile on GitHub Actions; Calculator 17.3.2 has been verified on device; API 101 on-device validation is pending.
